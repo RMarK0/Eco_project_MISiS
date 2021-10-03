@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eco_project_MISiS", "Eco_project_MISiS\Eco_project_MISiS.csproj", "{AC546559-88B3-466B-A646-3AB4F7AE1A90}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC546559-88B3-466B-A646-3AB4F7AE1A90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC546559-88B3-466B-A646-3AB4F7AE1A90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC546559-88B3-466B-A646-3AB4F7AE1A90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC546559-88B3-466B-A646-3AB4F7AE1A90}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EFB10578-F897-4604-95F3-4B80E6448B3F}
+	EndGlobalSection
+EndGlobal
