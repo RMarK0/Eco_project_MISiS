@@ -21,7 +21,6 @@ namespace Naumenko_Game
         {
 
         }
-        Random rnd = new Random();
 
         /// <summary>
         /// Блок кода, отвечающий за регистрацию клавиш
