@@ -20,21 +20,27 @@ namespace Naumenko_Game
         private Dictionary<int, string> categoryDictionary;
         private Hand mainHand;
         private InputProcessor InputProcessor;
-        private TrashItem ActiveTrashItem = null;
-
-
+        private TrashItem ActiveTrashItem;
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            categoryDictionary = new Dictionary<int, string>();
-            categoryDictionary.Add(1, "Стекло");
-            categoryDictionary.Add(2, "Пластик");
-            categoryDictionary.Add(3, "Бумага");
-            categoryDictionary.Add(4, "Металл");
-            categoryDictionary.Add(5, "Пищевые отходы");
-            categoryDictionary.Add(6, "Отходы жизнедеятельности");
+            categoryDictionary = new Dictionary<int, string>
+            {
+                { 1, "Стекло" },
+                { 2, "Пластик" },
+                { 3, "Бумага" },
+                { 4, "Металл" },
+                { 5, "Пищевые отходы" },
+                { 6, "Отходы жизнедеятельности" }
+            };
 
+            mainHand = new Hand((ClientSize.Width - 100) / 2, (ClientSize.Height - 100) / 2);
             InputProcessor = new InputProcessor(mainHand);
+            Controls.Add(mainHand.HandImage);
+
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Size = new Size(1280, 720);
+            MaximizeBox = false;
         }
 
         private bool moveRight; // false - значение по умолчанию
@@ -45,82 +51,61 @@ namespace Naumenko_Game
         private void Form1_KeyDown(object sender, KeyEventArgs e) // Если клавиша нажата, то двигаться 
         {
             if (e.KeyCode == Keys.Right)
-            {
                 moveRight = true;
-            }
-
+            
             if (e.KeyCode == Keys.Left)
-            {
                 moveLeft = true;
-            }
-
+            
             if (e.KeyCode == Keys.Up)
-            {
                 moveUp = true;
-            }
 
             if (e.KeyCode == Keys.Down)
-            {
                 moveDown = true;
-            }
 
-            try
-            {
-                InputProcessor.MoveHand(moveLeft, moveRight, moveUp, moveDown);
-                if (mainHand.isHoldingTrash && ActiveTrashItem != null)
-                {
-                    InputProcessor.MoveTrash(moveLeft, moveRight, moveUp, moveDown, ActiveTrashItem);
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception.Message);
-            }
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e) // Если клавиша была отжата, то перестать двигаться 
         {
             if (e.KeyCode == Keys.Right)
-            {
                 moveRight = false;
-            }
-
+            
             if (e.KeyCode == Keys.Left)
-            {
                 moveLeft = false;
-            }
 
             if (e.KeyCode == Keys.Up)
-            {
                 moveUp = false;
-            }
 
             if (e.KeyCode == Keys.Down)
-            {
                 moveDown = false;
+
+            if (e.KeyCode == Keys.Enter)
+                if (!mainHand.IsHoldingTrash && ActiveTrashItem != null)
+                    InputProcessor.GrabTrash(ActiveTrashItem);
+                else
+                    InputProcessor.ThrowTrash();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (ActiveTrashItem == null)
+            {
+                ActiveTrashItem = TrashFactory.CreateTrashItem(null);
+                Controls.Add(ActiveTrashItem.TrashImage);
             }
+            
 
             try
             {
                 InputProcessor.MoveHand(moveLeft, moveRight, moveUp, moveDown);
-                if (mainHand.isHoldingTrash && ActiveTrashItem != null)
+                if (mainHand.IsHoldingTrash && ActiveTrashItem != null)
                 {
-                    InputProcessor.MoveTrash(moveLeft, moveRight, moveUp, moveDown, ActiveTrashItem);
+                    InputProcessor.MoveTrash(ActiveTrashItem);
                 }
             }
             catch (Exception exception)
             {
                 Console.WriteLine(exception.Message);
             }
-
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            if (ActiveTrashItem == null)
-                ActiveTrashItem = TrashFactory.CreateTrashItem(null);
-
-
         }
     }
 }
