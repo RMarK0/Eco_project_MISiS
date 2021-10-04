@@ -85,9 +85,7 @@ namespace Naumenko_Game
             }
             icon.Size = new Size(150,150);
 
-            TrashItem trashItem = new TrashItem(category, icon);
-            trashItem.X = rnd.Next(30, 170);
-            trashItem.Y = rnd.Next(30, 170);
+            TrashItem trashItem = new TrashItem(category, icon) { X = rnd.Next(30, 170), Y = rnd.Next(30, 170) };
 
             return trashItem;
         }

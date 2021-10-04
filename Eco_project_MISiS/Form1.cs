@@ -48,9 +48,7 @@ namespace Naumenko_Game
             for (int i = 0; i < 6; i++)
             {
                 string url = "";
-                PictureBox pb = new PictureBox();
-                pb.Size = new Size(200,150);
-                pb.Location = new Point(locX, 530);
+                PictureBox pb = new PictureBox { Size = new Size(200, 150), Location = new Point(locX, 530) };
                 locX += 200;
                 switch (i)
                 {
