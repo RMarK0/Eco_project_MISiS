@@ -17,14 +17,20 @@ namespace Naumenko_Game
             InitializeComponent();
         }
 
+        private Dictionary<int, string> categoryDictionary;
+        private Hand hand;
         private void Form1_Load(object sender, EventArgs e)
         {
+            categoryDictionary = new Dictionary<int, string>();
+            categoryDictionary.Add(1, "Стекло");
+            categoryDictionary.Add(2, "Пластик");
+            categoryDictionary.Add(3, "Бумага");
+            categoryDictionary.Add(4, "Металл");
+            categoryDictionary.Add(5, "Пищевые отходы");
+            categoryDictionary.Add(6, "Отходы жизнедеятельности");
+
 
         }
-
-        /// <summary>
-        /// Блок кода, отвечающий за регистрацию клавиш
-        /// </summary>
 
         private bool moveRight; // false - значение по умолчанию
         private bool moveLeft; // false - значение по умолчанию
@@ -40,6 +46,8 @@ namespace Naumenko_Game
             {
                 moveLeft = true;
             }
+
+
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e) // Если клавиша была отжата, то перестать двигаться 
