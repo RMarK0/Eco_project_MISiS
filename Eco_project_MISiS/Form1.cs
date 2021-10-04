@@ -18,7 +18,12 @@ namespace Naumenko_Game
         }
 
         private Dictionary<int, string> categoryDictionary;
-        private Hand hand;
+        private Hand mainHand;
+        private InputProcessor InputProcessor;
+        private TrashItem ActiveTrashItem = null;
+
+
+
         private void Form1_Load(object sender, EventArgs e)
         {
             categoryDictionary = new Dictionary<int, string>();
@@ -29,11 +34,13 @@ namespace Naumenko_Game
             categoryDictionary.Add(5, "Пищевые отходы");
             categoryDictionary.Add(6, "Отходы жизнедеятельности");
 
-
+            InputProcessor = new InputProcessor(mainHand);
         }
 
         private bool moveRight; // false - значение по умолчанию
         private bool moveLeft; // false - значение по умолчанию
+        private bool moveUp; // false - значение по умолчанию
+        private bool moveDown; // false - значение по умолчанию
 
         private void Form1_KeyDown(object sender, KeyEventArgs e) // Если клавиша нажата, то двигаться 
         {
@@ -47,7 +54,28 @@ namespace Naumenko_Game
                 moveLeft = true;
             }
 
+            if (e.KeyCode == Keys.Up)
+            {
+                moveUp = true;
+            }
 
+            if (e.KeyCode == Keys.Down)
+            {
+                moveDown = true;
+            }
+
+            try
+            {
+                InputProcessor.MoveHand(moveLeft, moveRight, moveUp, moveDown);
+                if (mainHand.isHoldingTrash && ActiveTrashItem != null)
+                {
+                    InputProcessor.MoveTrash(moveLeft, moveRight, moveUp, moveDown, ActiveTrashItem);
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e) // Если клавиша была отжата, то перестать двигаться 
@@ -61,6 +89,38 @@ namespace Naumenko_Game
             {
                 moveLeft = false;
             }
+
+            if (e.KeyCode == Keys.Up)
+            {
+                moveUp = false;
+            }
+
+            if (e.KeyCode == Keys.Down)
+            {
+                moveDown = false;
+            }
+
+            try
+            {
+                InputProcessor.MoveHand(moveLeft, moveRight, moveUp, moveDown);
+                if (mainHand.isHoldingTrash && ActiveTrashItem != null)
+                {
+                    InputProcessor.MoveTrash(moveLeft, moveRight, moveUp, moveDown, ActiveTrashItem);
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.Message);
+            }
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (ActiveTrashItem == null)
+                ActiveTrashItem = TrashFactory.CreateTrashItem(null);
+
+
         }
     }
 }
