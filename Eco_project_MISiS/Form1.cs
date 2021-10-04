@@ -22,6 +22,8 @@ namespace Naumenko_Game
         private InputProcessor InputProcessor;
         private TrashItem ActiveTrashItem;
 
+        public PictureBox[] TrashBins = new PictureBox[6];
+
         private void Form1_Load(object sender, EventArgs e)
         {
             categoryDictionary = new Dictionary<int, string>
@@ -41,6 +43,46 @@ namespace Naumenko_Game
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Size = new Size(1280, 720);
             MaximizeBox = false;
+
+            int locX = 0;
+            for (int i = 0; i < 6; i++)
+            {
+                string url = "";
+                PictureBox pb = new PictureBox();
+                pb.Size = new Size(200,150);
+                pb.Location = new Point(locX, 530);
+                locX += 200;
+                switch (i)
+                {
+                    case (1):
+                        url =
+                            "C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\bin-food.png";
+                        break;
+                    case (2):
+                        url =
+                            "C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\bin-glass.png";
+                        break;
+                    case (3):
+                        url =
+                            "C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\bin-metal.png";
+                        break;
+                    case (4):
+                        url =
+                            "C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\bin-paper.png";
+                        break;
+                    case (5):
+                        url =
+                            "C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\bin-plastic.png";
+                        break;
+                    case (0):
+                        url =
+                            "C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\bin-bio.png";
+                        break;
+                }
+                pb.Load(url);
+                Controls.Add(pb);
+                TrashBins[i] = pb;
+            }
         }
 
         private bool moveRight; // false - значение по умолчанию
@@ -78,11 +120,11 @@ namespace Naumenko_Game
             if (e.KeyCode == Keys.Down)
                 moveDown = false;
 
-            if (e.KeyCode == Keys.Enter)
-                if (!mainHand.IsHoldingTrash && ActiveTrashItem != null)
+            if (e.KeyCode == Keys.Enter && ActiveTrashItem != null)
+                if (!mainHand.IsHoldingTrash)
                     InputProcessor.GrabTrash(ActiveTrashItem);
                 else
-                    InputProcessor.ThrowTrash();
+                    InputProcessor.ThrowTrash(ref ActiveTrashItem, this);
         }
 
         private void timer1_Tick(object sender, EventArgs e)

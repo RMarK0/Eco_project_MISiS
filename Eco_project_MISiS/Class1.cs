@@ -138,9 +138,19 @@ namespace Naumenko_Game
             }
         }
 
-        public void ThrowTrash()
+        public void ThrowTrash(ref TrashItem trash, Form1 form)
         {
             _inputHand.IsHoldingTrash = false;
+            foreach (PictureBox pb in form.TrashBins)
+            {
+                if (trash.TrashImage.Bounds.IntersectsWith(pb.Bounds))
+                {
+                    form.Controls.Remove(trash.TrashImage);
+                    trash = null;
+                    break;
+                }
+            }
+
         }
 
 
