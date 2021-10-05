@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +9,10 @@ using System.Windows.Forms;
 
 namespace Naumenko_Game
 {
-    interface ITrash
+    /// <summary>
+    /// Интерфейс, отвечающий за определение общих свойств объектов мусора
+    /// </summary>
+    interface ITrash 
     {
         int CategoryId { get; set; }
         PictureBox TrashImage { get; set; }
@@ -16,6 +20,9 @@ namespace Naumenko_Game
         int Y { get; set; }
     }
 
+    /// <summary>
+    /// Класс, определяющий взаимодействие и свойства руки
+    /// </summary>
     class Hand
     {
         internal int X { get; set; }
@@ -23,19 +30,21 @@ namespace Naumenko_Game
         public bool IsHoldingTrash { get; set; }
         public PictureBox HandImage { get; set; }
 
-        public Hand(int X, int Y)
+        public Hand(int x, int y) // конструктор для объекта руки
         {
             HandImage = new PictureBox();
-            this.HandImage = HandImage;
-            this.X = X;
-            this.Y = Y;
-            HandImage.Location = new System.Drawing.Point(X, Y);
+            
+            X = x;
+            Y = y;
+            HandImage.Location = new System.Drawing.Point(x, y);
             HandImage.Size = new Size(150,150);
-            HandImage.Load("C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\hand-icon.png");
+            HandImage.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\hand-icon.png");
         }
-
     }
 
+    /// <summary>
+    /// Класс, определяющий взаимодействие и свойства объекта мусора
+    /// </summary>
     class TrashItem : ITrash
     {
         public int CategoryId { get; set; }
@@ -43,10 +52,10 @@ namespace Naumenko_Game
         public int X { get; set; }
         public int Y { get; set; }
 
-        public TrashItem(int categoryId, PictureBox trashImage)
+        public TrashItem(int categoryId, PictureBox trashImage) // конструктор для объекта мусора
         {
-            this.CategoryId = categoryId;
-            this.TrashImage = trashImage;
+            CategoryId = categoryId;
+            TrashImage = trashImage;
 
             X = 0;
             Y = 0;
@@ -55,6 +64,9 @@ namespace Naumenko_Game
         }
     }
 
+    /// <summary>
+    /// Класс, отвечающий за появление объектов мусора на экране
+    /// </summary>
     static class TrashFactory
     {
         public static TrashItem CreateTrashItem(PictureBox trashImage)
@@ -65,22 +77,22 @@ namespace Naumenko_Game
             switch (category)
             {
                 case (1):
-                    icon.Load("C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\glass-icon.png");
+                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\glass-icon.png");
                     break;  // "Стекло" 
                 case (2):
-                    icon.Load("C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\plastic-icon.png");
+                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\plastic-icon.png");
                     break;  // "Пластик" 
                 case (3):
-                    icon.Load("C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\paper-icon.png");
+                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\paper-icon.png");
                     break; // "Бумага" 
                 case (4):
-                    icon.Load("C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\metal-icon.png");
+                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\metal-icon.png");
                     break; // "Металл" 
                 case (5):
-                    icon.Load("C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\food-icon.png");
+                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\food-icon.png");
                     break; // "Пищевые отходы" 
                 case (6):
-                    icon.Load("C:\\Users\\rybal\\Documents\\Visual Studio 2017\\Projects\\Eco_project_MISiS\\Eco_project_MISiS\\Resources\\bio-icon.png");
+                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\bio-icon.png");
                     break; // "Отходы жизнедеятельности"
             }
             icon.Size = new Size(150,150);
@@ -91,6 +103,9 @@ namespace Naumenko_Game
         }
     }
 
+    /// <summary>
+    /// Класс, отвечающий за обработку введенных клавиш
+    /// </summary>
     class InputProcessor
     {
         readonly Hand _inputHand;
@@ -101,28 +116,26 @@ namespace Naumenko_Game
 
         public void MoveHand(bool left, bool right, bool up, bool down)
         {
+            int speed = 3;
+
             if (left)
-            {
-                _inputHand.X -= 10;
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X - 5, _inputHand.HandImage.Location.Y);
-            }
+                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X - speed, _inputHand.HandImage.Location.Y);
+            
             if (right)
-            {
-                _inputHand.X += 10;
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X + 5, _inputHand.HandImage.Location.Y);
-            }
+                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X + speed, _inputHand.HandImage.Location.Y);
+            
             if (up)
-            {
-                _inputHand.Y -= 10;
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X, _inputHand.HandImage.Location.Y - 5);
-            }
+                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X, _inputHand.HandImage.Location.Y - speed);
+            
             if (down)
-            {
-                _inputHand.Y += 10;
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X, _inputHand.HandImage.Location.Y + 5);
-            }
+                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X, _inputHand.HandImage.Location.Y + speed);
+            
         }
 
+        /// <summary>
+        /// Метод, позволяющий активной руке схватить объект мусора
+        /// </summary>
+        /// <param name="trash">Объект мусора, который необходимо схватить</param>
         public void GrabTrash(TrashItem trash)
         {
             if (Math.Abs(trash.TrashImage.Location.X - _inputHand.HandImage.Location.X) < 30 &&
@@ -148,9 +161,7 @@ namespace Naumenko_Game
                     break;
                 }
             }
-
         }
-
 
         public void MoveTrash(TrashItem trash)
         {
