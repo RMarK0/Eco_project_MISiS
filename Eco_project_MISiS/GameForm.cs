@@ -11,24 +11,34 @@ using System.Windows.Forms;
 
 namespace Naumenko_Game
 {
-    public partial class Form1 : Form
+    public partial class GameForm : Form
     {
-        public Form1()
+        public GameForm()
         {
             InitializeComponent();
+            MainHand = new Hand(ClientSize.Width / 2, ClientSize.Height / 2); 
+            _trashMovementSubject = new TrashMovementSubject(this);
+            _handMovementSubject = new HandMovementSubject(this);
         }
 
         private Dictionary<int, string> _categoryDictionary; // создаем словарь категорий мусора - он понадобится для вычисления результата для каждой категории
-        private Hand _mainHand; // создаем объект руки
-        private InputProcessor _inputProcessor; // создаем объект, отвечающий за обработку введенных клавиш
-        private TrashItem _activeTrashItem; // создаем объект мусора - он может быть только один, и как только он выкидывается, появляется новый
+        public Hand MainHand; // создаем объект руки
+        public TrashItem ActiveTrashItem; // создаем объект мусора - он может быть только один, и как только он выкидывается, появляется новый
         private readonly string _projectUri = Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName;
         // создаем объект, который получает путь к нашему проекту. Впоследствии это понадобится для получения пути для иконок и тд
+
+        private readonly TrashMovementSubject _trashMovementSubject;
+        private readonly TrashMovementObserver _trashMovementObserver = new TrashMovementObserver();
+        private readonly HandMovementSubject _handMovementSubject;
+        private readonly HandMovementObserver _handMovementObserver = new HandMovementObserver();
+
 
         public PictureBox[] TrashBins = new PictureBox[6]; // создаем массив мусорок
 
         private void Form1_Load(object sender, EventArgs e) // код в этом методе выполняется при загрузке программы
         {
+            _trashMovementSubject.Attach(_trashMovementObserver);
+            _handMovementSubject.Attach(_handMovementObserver);
             _categoryDictionary = new Dictionary<int, string> // вносим в массив наши категории мусора
             {
                 { 1, "Стекло" },
@@ -39,9 +49,7 @@ namespace Naumenko_Game
                 { 6, "Отходы жизнедеятельности" }
             };
 
-            _mainHand = new Hand(ClientSize.Width/ 2, ClientSize.Height/ 2); // определяем местоположение руки в момент загрузки
-            _inputProcessor = new InputProcessor(_mainHand); // подключаем руку к обработчику введенных клавиш
-            Controls.Add(_mainHand.HandImage); // выводим руку на экран
+            Controls.Add(MainHand.HandImage); // выводим руку на экран
 
             // эти 3 параметра отвечают за вид окна программы
             FormBorderStyle = FormBorderStyle.FixedSingle; // запрещаем менять размер окна
@@ -84,62 +92,59 @@ namespace Naumenko_Game
         }
 
         // эти 4 переменные отвечают за движение по осям X и Y
-        private bool moveRight; 
-        private bool moveLeft; 
-        private bool moveUp; 
-        private bool moveDown; 
+        private bool _moveRight; 
+        private bool _moveLeft; 
+        private bool _moveUp; 
+        private bool _moveDown; 
 
         private void Form1_KeyDown(object sender, KeyEventArgs e) // Если клавиша была нажата
         {
             if (e.KeyCode == Keys.Right) // если нажата стрелка вправо
-                moveRight = true;
+                _moveRight = true;
             
             if (e.KeyCode == Keys.Left) // если нажата стрелка влево
-                moveLeft = true;
+                _moveLeft = true;
             
             if (e.KeyCode == Keys.Up) // если нажата стрелка вверх
-                moveUp = true;
+                _moveUp = true;
 
             if (e.KeyCode == Keys.Down) // если нажата стрелка вниз
-                moveDown = true;
+                _moveDown = true;
 
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e) // Если клавиша была отжата
         {
             if (e.KeyCode == Keys.Right) // если нажата стрелка вправо
-                moveRight = false;
+                _moveRight = false;
 
             if (e.KeyCode == Keys.Left) // если нажата стрелка влево
-                moveLeft = false;
+                _moveLeft = false;
 
             if (e.KeyCode == Keys.Up) // если нажата стрелка вверх
-                moveUp = false;
+                _moveUp = false;
 
             if (e.KeyCode == Keys.Down) // если нажата стрелка вниз
-                moveDown = false;
+                _moveDown = false;
 
-            if (e.KeyCode == Keys.Enter && _activeTrashItem != null) // обработка захвата мусора рукой
-                if (!_mainHand.IsHoldingTrash) // если рука не держит мусор
-                    _inputProcessor.GrabTrash(_activeTrashItem); // взять мусор в руку
-                else                           // если рука держит мусор
-                    _inputProcessor.ThrowTrash(ref _activeTrashItem, this); // выбросить мусор из руки
+            if (e.KeyCode == Keys.Enter && ActiveTrashItem != null) // обработка захвата мусора рукой
+                _trashMovementSubject.UpdateTrashMovement(MainHand.IsHoldingTrash, false);
         }
 
         private void timer1_Tick(object sender, EventArgs e) // метод, вызывающийся каждый tick таймера
         {
-            if (_activeTrashItem == null) // если объект мусора был обнулен
+            if (ActiveTrashItem == null) // если объект мусора был обнулен
             {
-                _activeTrashItem = TrashFactory.CreateTrashItem(null); // создаем новый объект
-                Controls.Add(_activeTrashItem.TrashImage); // отображаем его на экране
+                ActiveTrashItem = TrashFactory.CreateTrashItem(); // создаем новый объект
+                Controls.Add(ActiveTrashItem.TrashImage); // отображаем его на экране
             }
             
             try
             {
-                _inputProcessor.MoveHand(moveLeft, moveRight, moveUp, moveDown); // двигать руку по осям, исходя из тех 4 переменных
-                if (_mainHand.IsHoldingTrash && _activeTrashItem != null) // если рука держит мусор, и если объект мусора существует
+                _handMovementSubject.UpdateMovementTriggers(_moveLeft, _moveRight, _moveUp, _moveDown);
+                if (MainHand.IsHoldingTrash && ActiveTrashItem != null) // если рука держит мусор, и если объект мусора существует
                 {
-                    _inputProcessor.MoveTrash(_activeTrashItem); // двигать мусор вместе с рукой
+                    _trashMovementSubject.UpdateTrashMovement(false, true);
                 }
             }
             catch (Exception) { } // игнорировать ошибки 

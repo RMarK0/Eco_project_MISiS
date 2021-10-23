@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,10 +21,185 @@ namespace Naumenko_Game
         int Y { get; set; }
     }
 
+    public interface ISubject
+    {
+        void Attach(IObserver observer);
+        void Detach(IObserver observer);
+
+        void Notify();
+    }
+
+    public interface IObserver
+    {
+        void Update(ISubject subject);
+    }
+
+    public class TrashMovementSubject : ISubject
+    {
+        internal bool IsMovingTrash;
+        internal bool IsThrowingTrash;
+        internal GameForm GameForm;
+        public TrashMovementSubject(GameForm form)
+        {
+            GameForm = form;
+        }
+
+        public void UpdateTrashMovement(bool isThrowingTrash, bool isMovingTrash)
+        {
+            IsMovingTrash = isMovingTrash;
+            IsThrowingTrash = isThrowingTrash;
+            Notify();
+        }
+
+        // Ниже идет часть кода, отвечающая за реализацию паттерна Observer
+        private readonly List<IObserver> _observers = new List<IObserver>();
+
+        public void Attach(IObserver observer)
+        {
+            _observers.Add(observer);
+        }
+
+        public void Detach(IObserver observer)
+        {
+            _observers.Remove(observer);
+        }
+
+        public void Notify()
+        {
+            foreach (IObserver observer in _observers)
+            {
+                observer.Update(this);
+            }
+        }
+    }
+    public class HandMovementSubject : ISubject
+    {
+        internal readonly Hand ActiveHand;
+        internal GameForm ActiveForm;
+
+        public bool MoveLeftTrigger;
+        public bool MoveRightTrigger;
+        public bool MoveUpTrigger;
+        public bool MoveDownTrigger;
+
+        public HandMovementSubject(GameForm form)
+        {
+            ActiveForm = form;
+            ActiveHand = ActiveForm.MainHand;
+        }
+
+        public void UpdateMovementTriggers(bool moveLeft, bool moveRight, bool moveUp, bool moveDown)
+        {
+            MoveDownTrigger = moveDown;
+            MoveLeftTrigger = moveLeft;
+            MoveRightTrigger = moveRight;
+            MoveUpTrigger = moveUp;
+
+            Notify();
+        }
+
+        // Ниже идет часть кода, отвечающая за реализацию паттерна Observer
+        private readonly List<IObserver> _observers = new List<IObserver>();
+
+        public void Attach(IObserver observer)
+        {
+            _observers.Add(observer);
+        }
+
+        public void Detach(IObserver observer)
+        {
+            _observers.Remove(observer);
+        }
+
+        public void Notify()
+        {
+            foreach (IObserver observer in _observers)
+            {
+                observer.Update(this);
+            }
+        }
+    }
+
+    public class HandMovementObserver : IObserver
+    {
+        private readonly int _speed = 3;
+
+        public void Update(ISubject sbj)
+        {
+            if (((HandMovementSubject)sbj).MoveDownTrigger)
+                ((HandMovementSubject)sbj).ActiveHand.HandImage.Location = new Point(
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.X,
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.Y + _speed);
+            
+            if (((HandMovementSubject)sbj).MoveLeftTrigger)
+                ((HandMovementSubject)sbj).ActiveHand.HandImage.Location = new Point(
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.X - _speed,
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.Y);
+            
+            if (((HandMovementSubject)sbj).MoveRightTrigger)
+                ((HandMovementSubject)sbj).ActiveHand.HandImage.Location = new Point(
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.X + _speed,
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.Y);
+            
+            if (((HandMovementSubject)sbj).MoveUpTrigger)
+                ((HandMovementSubject)sbj).ActiveHand.HandImage.Location = new Point(
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.X,
+                    ((HandMovementSubject)sbj).ActiveHand.HandImage.Location.Y - _speed);
+        }
+    }
+
+    public class TrashMovementObserver : IObserver
+    {
+        public void Update(ISubject subj)
+        {
+            TrashMovementSubject subject = (TrashMovementSubject) subj;
+            Hand activeHand = subject.GameForm.MainHand;
+
+            if (subject.IsMovingTrash)
+            {
+                subject.GameForm.ActiveTrashItem.TrashImage.Location = subject.GameForm.MainHand.HandImage.Location;
+                subject.GameForm.ActiveTrashItem.X = subject.GameForm.MainHand.X;
+                subject.GameForm.ActiveTrashItem.Y = subject.GameForm.MainHand.Y;
+            }
+            else
+            {
+                if (!subject.IsThrowingTrash)
+                {
+                    if (subject.GameForm.ActiveTrashItem.TrashImage.Bounds.IntersectsWith(activeHand.HandImage.Bounds))
+                    {
+                        subject.GameForm.ActiveTrashItem.TrashImage.Location = activeHand.HandImage.Location;
+                        subject.GameForm.ActiveTrashItem.X = activeHand.X;
+                        subject.GameForm.ActiveTrashItem.Y = activeHand.Y;
+
+                        subject.GameForm.MainHand.IsHoldingTrash = true;
+                    }
+                }
+                else
+                {
+                    subject.GameForm.MainHand.IsHoldingTrash = false;
+
+                    // 
+                    foreach (PictureBox pb in subject.GameForm.TrashBins)
+                    {
+                        if (subject.GameForm.ActiveTrashItem.TrashImage.Bounds.IntersectsWith(pb.Bounds))
+                        {
+                            subject.GameForm.Controls.Remove(subject.GameForm.ActiveTrashItem.TrashImage);
+                            subject.GameForm.ActiveTrashItem = null;
+                            subject.GameForm.MainHand.IsHoldingTrash = false;
+
+                            break;
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Класс, определяющий взаимодействие и свойства руки
     /// </summary>
-    class Hand
+    public class Hand
     {
         internal int X { get; set; }
         internal int Y { get; set; }
@@ -36,7 +212,7 @@ namespace Naumenko_Game
             
             X = x;
             Y = y;
-            HandImage.Location = new System.Drawing.Point(x, y);
+            HandImage.Location = new Point(x, y);
             HandImage.Size = new Size(150,150);
             HandImage.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\hand-icon.png");
         }
@@ -45,7 +221,7 @@ namespace Naumenko_Game
     /// <summary>
     /// Класс, определяющий взаимодействие и свойства объекта мусора
     /// </summary>
-    class TrashItem : ITrash
+    public class TrashItem : ITrash
     {
         public int CategoryId { get; set; }
         public PictureBox TrashImage { get; set; }
@@ -60,7 +236,7 @@ namespace Naumenko_Game
             X = 0;
             Y = 0;
 
-            trashImage.Location = new System.Drawing.Point(X, Y);
+            trashImage.Location = new Point(X, Y);
         }
     }
 
@@ -69,7 +245,9 @@ namespace Naumenko_Game
     /// </summary>
     static class TrashFactory
     {
-        public static TrashItem CreateTrashItem(PictureBox trashImage)
+        private static readonly string _projectUrl = Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName;
+        // Путь к папке проекта
+        public static TrashItem CreateTrashItem()
         {
             Random rnd = new Random();
             int category = rnd.Next(1, 7);
@@ -77,22 +255,22 @@ namespace Naumenko_Game
             switch (category)
             {
                 case (1):
-                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\glass-icon.png");
+                    icon.Load(_projectUrl + "\\Resources\\glass-icon.png");
                     break;  // "Стекло" 
                 case (2):
-                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\plastic-icon.png");
+                    icon.Load(_projectUrl + "\\Resources\\plastic-icon.png");
                     break;  // "Пластик" 
                 case (3):
-                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\paper-icon.png");
+                    icon.Load(_projectUrl + "\\Resources\\paper-icon.png");
                     break; // "Бумага" 
                 case (4):
-                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\metal-icon.png");
+                    icon.Load(_projectUrl + "\\Resources\\metal-icon.png");
                     break; // "Металл" 
                 case (5):
-                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\food-icon.png");
+                    icon.Load(_projectUrl + "\\Resources\\food-icon.png");
                     break; // "Пищевые отходы" 
                 case (6):
-                    icon.Load(Directory.GetParent(Environment.CurrentDirectory)?.Parent?.FullName + "\\Resources\\bio-icon.png");
+                    icon.Load(_projectUrl + "\\Resources\\bio-icon.png");
                     break; // "Отходы жизнедеятельности"
             }
             icon.Size = new Size(150,150);
@@ -104,75 +282,13 @@ namespace Naumenko_Game
     }
 
     /// <summary>
-    /// Класс, отвечающий за обработку введенных клавиш
+    /// Класс, определяющий функционал и свойства объекта результата
     /// </summary>
-    class InputProcessor
-    {
-        readonly Hand _inputHand;
-        public InputProcessor(Hand hand)
-        {
-            _inputHand = hand;
-        }
-
-        public void MoveHand(bool left, bool right, bool up, bool down)
-        {
-            int speed = 3;
-
-            if (left)
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X - speed, _inputHand.HandImage.Location.Y);
-            
-            if (right)
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X + speed, _inputHand.HandImage.Location.Y);
-            
-            if (up)
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X, _inputHand.HandImage.Location.Y - speed);
-            
-            if (down)
-                _inputHand.HandImage.Location = new System.Drawing.Point(_inputHand.HandImage.Location.X, _inputHand.HandImage.Location.Y + speed);
-            
-        }
-
-        /// <summary>
-        /// Метод, позволяющий активной руке схватить объект мусора
-        /// </summary>
-        /// <param name="trash">Объект мусора, который необходимо схватить</param>
-        public void GrabTrash(TrashItem trash)
-        {
-            if (Math.Abs(trash.TrashImage.Location.X - _inputHand.HandImage.Location.X) < 30 &&
-                Math.Abs(trash.TrashImage.Location.Y - _inputHand.HandImage.Location.Y) < 30)
-            {
-                trash.X = _inputHand.X;
-                trash.Y = _inputHand.Y;
-                trash.TrashImage.Location = _inputHand.HandImage.Location;
-
-                _inputHand.IsHoldingTrash = true;
-            }
-        }
-
-        public void ThrowTrash(ref TrashItem trash, Form1 form)
-        {
-            _inputHand.IsHoldingTrash = false;
-            foreach (PictureBox pb in form.TrashBins)
-            {
-                if (trash.TrashImage.Bounds.IntersectsWith(pb.Bounds))
-                {
-                    form.Controls.Remove(trash.TrashImage);
-                    trash = null;
-                    break;
-                }
-            }
-        }
-
-        public void MoveTrash(TrashItem trash)
-        {
-            trash.TrashImage.Location = _inputHand.HandImage.Location;
-        }
-    }
-
     class Result
     {
         private int Value { get; set; }
         private int CategoryId { get; set; }
+
 
 
     }
